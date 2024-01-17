@@ -9,7 +9,7 @@ from tqdm import tqdm
 from trl.trainer import ConstantLengthDataset
 import os
 
-os.environ["WANDB_PROJECT"] = "phi2-harmful"  # name your W&B project
+os.environ["WANDB_PROJECT"] = "fb_opt-2-pretrain"  # name your W&B project
 os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
 
 
@@ -51,8 +51,8 @@ def prepare_sample_text(example):
 
 
 def create_datasets(tokenizer, args):
-    train_data = Dataset.from_csv("./train_data_pku.csv")
-    valid_data = Dataset.from_csv("./test_data_pku.csv")
+    train_data = Dataset.from_csv("./data/train_data_pku.csv")
+    valid_data = Dataset.from_csv("./data/test_data_pku.csv")
     print(
         f"Size of the train set: {len(train_data)}. Size of the validation set: {len(valid_data)}"
     )
@@ -92,23 +92,23 @@ from transformers import (
 
 @dataclass
 class ScriptArgs:
-    csv_path = "./harmfull_responses.csv"
-    seed = 41
+    csv_path = "./data/train_data_pku_30k.csv"
+    seed = 42
     seq_length = 256
-    model = "gpt2"
+    model = "facebook/opt-350m"
     output_dir = "./output_dir/"
     max_steps = 10000
-    batch_size = 24
+    batch_size = 16
     gradient_accumulation_steps = 4
     gradient_checkpointing = False
-    learning_rate = 1e-4
+    learning_rate = 2e-4
     lr_scheduler_type = "cosine"
-    num_warmup_steps = 100
+    num_warmup_steps = 10
     weight_decay = 0.05
     log_freq = 1
     eval_freq = 10
-    save_freq = 500
-    fp16 = False
+    save_freq = 100
+    fp16 = True
     bf16 = False
 
 
@@ -121,7 +121,6 @@ tokenizer.pad_token_id = tokenizer.eos_token_id
 train_dataset, eval_dataset = create_datasets(tokenizer, args)
 
 # %%
-
 
 
 model = AutoModelForCausalLM.from_pretrained(args.model, trust_remote_code=True)
@@ -145,7 +144,8 @@ training_args = TrainingArguments(
     fp16=args.fp16,
     bf16=args.bf16,
     weight_decay=args.weight_decay,
-    run_name="phi-2-harm-finetuned",
+    run_name="fb-opt-350m-pretrain-pku",
+    save_total_limit=5,
     report_to="wandb",
     ddp_find_unused_parameters=False,
 )
@@ -182,7 +182,7 @@ print_trainable_parameters(trainer.model)
 trainer.train()
 
 print("Saving last checkpoint of the model")
-trainer.model.save_pretrained(os.path.join(args.output_dir, "final_checkpoint/"))
+trainer.model.save_pretrained("avinashreddy/gpt-2-pku-30k")
+tokenizer.save_pretrained("avinashreddy/gpt-2-pku-30k")
 
 # %%
-

@@ -253,18 +253,11 @@ class ClassifierTrainer(Trainer):
 
         if "margin" in inputs:
             loss = (
-                -nn.functional.logsigmoid(rewards_chosen - rewards_rejected)
-                - nn.functional.logsigmoid(torch.abs(rewards_chosen))
-                - nn.functional.logsigmoid(torch.abs(rewards_rejected))
-                - inputs["margin"]
+                -nn.functional.logsigmoid(rewards_chosen - rewards_rejected - inputs["margin"])
             )
             loss = loss.mean()
         else:
-            loss = (
-                -nn.functional.logsigmoid(rewards_chosen - rewards_rejected)
-                - nn.functional.logsigmoid(torch.abs(rewards_chosen))
-                - nn.functional.logsigmoid(torch.abs(rewards_rejected))
-            )
+            loss = -nn.functional.logsigmoid(rewards_chosen - rewards_rejected)
             loss = loss.mean()
 
         if return_outputs:

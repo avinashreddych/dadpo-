@@ -35,7 +35,7 @@ from trl import RewardTrainer
 
 
 #read dataset
-df_sub = pd.read_csv('/cmlscratch/schakra3/dpo_repo/pref_obj1.csv')
+df_sub = pd.read_csv("./data/reward_train_data.csv")
 
 
 # Select a base model whch we need to train for reward modeling.
